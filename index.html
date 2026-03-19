@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1c1917">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ubytovanie">
+<link rel="manifest" href="manifest.json">
+<title>Ubytovanie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #1c1917;
+  --surface:  #292524;
+  --surface2: #3c3330;
+  --border:   rgba(214,185,143,0.18);
+  --gold:     #d6b98f;
+  --gold2:    #e8cfa8;
+  --text:     #f5f0e8;
+  --text2:    #a89880;
+  --text3:    #6b5c4e;
+  --green:    #4caf78;
+  --red:      #e05a5a;
+  --amber:    #d4a843;
+  --r:        10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  display:flex;flex-direction:column;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── NAV ── */
+nav{
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  display:flex;
+  padding:0 4px;
+  flex-shrink:0;
+}
+.nav-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  gap:3px;padding:10px 4px 8px;
+  border:none;background:none;color:var(--text2);
+  font-family:'DM Sans',sans-serif;font-size:10px;font-weight:400;
+  cursor:pointer;transition:color .2s;border-top:2px solid transparent;
+}
+.nav-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.nav-btn.active{color:var(--gold);border-top-color:var(--gold)}
+
+/* ── PAGES ── */
+.page{display:none;flex:1;overflow-y:auto;flex-direction:column}
+.page.active{display:flex}
+
+/* ── HEADER ── */
+.page-header{
+  padding:1.25rem 1rem 0.75rem;
+  display:flex;align-items:baseline;justify-content:space-between;
+  flex-shrink:0;
+}
+.page-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:26px;font-weight:600;color:var(--gold);
+  letter-spacing:0.01em;
+}
+.page-sub{font-size:12px;color:var(--text2)}
+
+/* ── SCROLL CONTENT ── */
+.scroll-content{padding:0 1rem 6rem;flex:1}
+
+/* ══════════════════════════════
+   PREHĽAD – dnes ubytovaní
+══════════════════════════════ */
+.today-section{margin-bottom:1.5rem}
+.section-label{
+  font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--text3);margin-bottom:.6rem;font-weight:500;
+}
+
+.room-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:.9rem 1rem;
+  margin-bottom:.5rem;
+  display:flex;align-items:center;gap:.85rem;
+  transition:border-color .2s;
+}
+.room-card:active{border-color:var(--gold)}
+.room-dot{
+  width:10px;height:10px;border-radius:50%;flex-shrink:0;
+}
+.dot-free{background:var(--green)}
+.dot-busy{background:var(--red)}
+.dot-soon{background:var(--amber)}
+.room-info{flex:1;min-width:0}
+.room-name{font-size:14px;font-weight:500;color:var(--text)}
+.room-detail{font-size:12px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.room-beds{font-size:11px;color:var(--text3);margin-left:auto;flex-shrink:0}
+
+/* ══════════════════════════════
+   KALENDÁR – mesačný prehľad
+══════════════════════════════ */
+.cal-nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.5rem 1rem .75rem;flex-shrink:0;
+}
+.cal-nav button{
+  background:none;border:1px solid var(--border);border-radius:6px;
+  color:var(--text2);font-size:18px;padding:2px 10px;cursor:pointer;
+}
+.cal-nav button:active{background:var(--surface2)}
+.cal-month{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--gold);font-weight:600}
+
+.cal-grid{
+  display:grid;grid-template-columns:repeat(7,1fr);
+  gap:2px;padding:0 1rem;flex-shrink:0;
+}
+.cal-day-label{text-align:center;font-size:10px;color:var(--text3);padding:4px 0;font-weight:500}
+.cal-day{
+  aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+  border-radius:6px;font-size:13px;cursor:pointer;
+  position:relative;transition:background .15s;
+}
+.cal-day:active{background:var(--surface2)}
+.cal-day.other-month{color:var(--text3)}
+.cal-day.today{color:var(--gold);font-weight:500}
+.cal-day.today::after{
+  content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);
+  width:4px;height:4px;border-radius:50%;background:var(--gold);
+}
+.cal-day.has-event::before{
+  content:'';position:absolute;top:4px;right:4px;
+  width:5px;height:5px;border-radius:50%;background:var(--red);opacity:.8;
+}
+.cal-day.selected{background:var(--gold);color:#1c1917;font-weight:500}
+.cal-day.selected::after,.cal-day.selected::before{display:none}
+
+.day-reservations{
+  flex:1;overflow-y:auto;padding:0 1rem;margin-top:.75rem;
+}
+.day-res-header{
+  font-size:12px;color:var(--text2);margin-bottom:.5rem;
+}
+.res-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);padding:.75rem 1rem;margin-bottom:.5rem;
+}
+.res-room{font-size:13px;font-weight:500;color:var(--gold)}
+.res-guest{font-size:13px;color:var(--text);margin-top:2px}
+.res-dates{font-size:11px;color:var(--text2);margin-top:3px}
+.res-note{font-size:11px;color:var(--text3);margin-top:3px;font-style:italic}
+
+/* ══════════════════════════════
+   FORMULÁR – nová rezervácia
+══════════════════════════════ */
+.form-group{margin-bottom:1rem}
+.form-label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:.4rem;display:block;font-weight:500}
+.form-input,.form-select,.form-textarea{
+  width:100%;background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;padding:.7rem .85rem;
+  color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;
+  outline:none;transition:border-color .2s;
+  -webkit-appearance:none;
+}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--gold)}
+.form-select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a89880' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .85rem center}
+.form-select option{background:#292524}
+.form-textarea{resize:none;min-height:80px;line-height:1.5}
+
+.date-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+
+.room-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:.5rem;
+}
+.room-option{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;padding:.65rem .75rem;cursor:pointer;
+  transition:all .15s;
+}
+.room-option.selected{border-color:var(--gold);background:rgba(214,185,143,.08)}
+.room-option-name{font-size:13px;font-weight:500;color:var(--text)}
+.room-option-beds{font-size:11px;color:var(--text2);margin-top:1px}
+
+.btn-submit{
+  width:100%;padding:.85rem;margin-top:.5rem;
+  background:var(--gold);border:none;border-radius:var(--r);
+  color:#1c1917;font-family:'DM Sans',sans-serif;
+  font-size:15px;font-weight:500;cursor:pointer;
+  transition:background .2s;
+}
+.btn-submit:active{background:var(--gold2)}
+.btn-submit:disabled{background:var(--surface2);color:var(--text3);cursor:default}
+
+/* ══════════════════════════════
+   TOAST
+══════════════════════════════ */
+.toast{
+  position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:20px;padding:.6rem 1.2rem;
+  font-size:13px;color:var(--text);
+  opacity:0;transition:all .3s;pointer-events:none;
+  white-space:nowrap;z-index:999;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.error{border-color:var(--red);color:var(--red)}
+.toast.success{border-color:var(--green);color:var(--green)}
+
+/* ══════════════════════════════
+   SPINNER
+══════════════════════════════ */
+.spinner{
+  display:inline-block;width:16px;height:16px;
+  border:2px solid rgba(28,25,23,.3);
+  border-top-color:#1c1917;
+  border-radius:50%;animation:spin .7s linear infinite;
+  vertical-align:middle;margin-right:6px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Loading overlay */
+.loading-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(28,25,23,.7);
+  align-items:center;justify-content:center;
+  z-index:500;
+  flex-direction:column;gap:.75rem;
+}
+.loading-overlay.show{display:flex}
+.loading-text{color:var(--gold);font-size:13px}
+</style>
+</head>
+<body>
+
+<!-- ══ PAGES ══ -->
+
+<!-- PREHĽAD -->
+<div class="page active" id="page-overview">
+  <div class="page-header">
+    <div class="page-title">Ubytovanie</div>
+    <div class="page-sub" id="today-label"></div>
+  </div>
+  <div class="scroll-content">
+    <div class="today-section">
+      <div class="section-label">Dnes ubytovaní</div>
+      <div id="today-rooms"></div>
+    </div>
+    <div class="today-section">
+      <div class="section-label">Čoskoro (najbližších 7 dní)</div>
+      <div id="soon-rooms"></div>
+    </div>
+  </div>
+</div>
+
+<!-- KALENDÁR -->
+<div class="page" id="page-calendar">
+  <div class="page-header">
+    <div class="page-title">Kalendár</div>
+  </div>
+  <div class="cal-nav">
+    <button onclick="changeMonth(-1)">‹</button>
+    <div class="cal-month" id="cal-month-label"></div>
+    <button onclick="changeMonth(1)">›</button>
+  </div>
+  <div class="cal-grid" id="cal-grid"></div>
+  <div class="day-reservations" id="day-reservations">
+    <div class="day-res-header">Vyber deň pre zobrazenie rezervácií</div>
+  </div>
+</div>
+
+<!-- NOVÁ REZERVÁCIA -->
+<div class="page" id="page-new">
+  <div class="page-header">
+    <div class="page-title">Nová rezervácia</div>
+  </div>
+  <div class="scroll-content">
+    <div class="form-group">
+      <label class="form-label">Meno hosťa</label>
+      <input class="form-input" id="f-guest" type="text" placeholder="Meno a priezvisko" autocomplete="name">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Kontakt</label>
+      <input class="form-input" id="f-contact" type="text" placeholder="Telefón alebo email">
+    </div>
+    <div class="form-group date-row">
+      <div>
+        <label class="form-label">Príchod</label>
+        <input class="form-input" id="f-from" type="date">
+      </div>
+      <div>
+        <label class="form-label">Odchod</label>
+        <input class="form-input" id="f-to" type="date">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Izba</label>
+      <div class="room-grid" id="room-grid"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Poznámka</label>
+      <textarea class="form-textarea" id="f-note" placeholder="Prípadné doplňujúce informácie..."></textarea>
+    </div>
+    <button class="btn-submit" id="btn-submit" onclick="submitReservation()">Pridať rezerváciu</button>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <button class="nav-btn active" onclick="showPage('overview',this)">
+    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Prehľad
+  </button>
+  <button class="nav-btn" onclick="showPage('calendar',this)">
+    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Kalendár
+  </button>
+  <button class="nav-btn" onclick="showPage('new',this)">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    Nová
+  </button>
+</nav>
+
+<div class="toast" id="toast"></div>
+<div class="loading-overlay" id="loading">
+  <div class="spinner" style="width:28px;height:28px;border-width:3px;border-top-color:var(--gold);border-color:rgba(214,185,143,.2)"></div>
+  <div class="loading-text" id="loading-text">Načítavam...</div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// KONFIGURÁCIA – sem vlož URL svojho Apps Scriptu
+// ══════════════════════════════════════════════
+const SCRIPT_URL = 'https://script.google.com/d/1xf0muFaCL_i7F_XuxGuYddqnSaJYk9xs5Qt9K57yzy5Oka_U0VSt7Wss/edit?usp=sharing';
+
+const ROOMS = [
+  { id: 'assisi',       name: 'Assisi',                  beds: 2,  note: '' },
+  { id: 'perugia',      name: 'Perugia',                 beds: 2,  note: '+ prístelok' },
+  { id: 'laverna',      name: 'La Verna',                beds: 2,  note: '' },
+  { id: 'anton',        name: 'Anton',                   beds: 1,  note: '' },
+  { id: 'leo',          name: 'Leo',                     beds: 1,  note: '' },
+  { id: 'klauzu ra',    name: 'Apartmán Klauzúra',       beds: 1,  note: '' },
+  { id: 'navst1',       name: 'Návštevka Klauzúra I',    beds: 1,  note: '' },
+  { id: 'navst2',       name: 'Návštevka Klauzúra II',   beds: 1,  note: '' },
+  { id: 'navst3',       name: 'Návštevka Klauzúra III',  beds: 1,  note: '' },
+  { id: 'aronova',      name: 'exÁronova 115',           beds: 1,  note: '+ prístelok' },
+  { id: 'timotejova',   name: 'exTimotejova 117',        beds: 2,  note: '' },
+];
+
+// ══════════════════════════════════════════════
+// STAV
+// ══════════════════════════════════════════════
+let reservations = [];  // [{room, guest, contact, from, to, note}]
+let calYear, calMonth;
+let selectedCalDay = null;
+let selectedRoom = null;
+let lastFetch = 0;
+
+const today = new Date();
+today.setHours(0,0,0,0);
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  calYear  = today.getFullYear();
+  calMonth = today.getMonth();
+
+  document.getElementById('today-label').textContent = formatDate(today);
+
+  // Predvyplniť dátumy
+  document.getElementById('f-from').value = toInputDate(today);
+  const tom = new Date(today); tom.setDate(tom.getDate()+1);
+  document.getElementById('f-to').value = toInputDate(tom);
+
+  buildRoomGrid();
+  renderCalendar();
+  fetchReservations();
+});
+
+// ══════════════════════════════════════════════
+// NAVIGÁCIA
+// ══════════════════════════════════════════════
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'overview') renderOverview();
+  if (name === 'calendar') renderCalendar();
+}
+
+// ══════════════════════════════════════════════
+// FETCH REZERVÁCIÍ Z APPS SCRIPT
+// ══════════════════════════════════════════════
+async function fetchReservations(force=false) {
+  if (!force && Date.now() - lastFetch < 60000) return; // cache 1 min
+  showLoading('Načítavam rezervácie...');
+  try {
+    const r = await fetch(SCRIPT_URL + '?action=getReservations');
+    const data = await r.json();
+    if (data.ok) {
+      reservations = data.reservations.map(r => ({
+        ...r,
+        fromDate: new Date(r.from),
+        toDate: new Date(r.to),
+      }));
+      lastFetch = Date.now();
+      renderOverview();
+      renderCalendar();
+    } else {
+      showToast('Chyba pri načítaní: ' + data.error, 'error');
+    }
+  } catch(e) {
+    showToast('Nepodarilo sa spojiť so serverom', 'error');
+    // Demo dáta pre testovanie bez backendu
+    loadDemoData();
+  } finally {
+    hideLoading();
+  }
+}
+
+function loadDemoData() {
+  const t = new Date(today);
+  reservations = [
+    { room:'Assisi', guest:'Ján Novák', contact:'0901 123 456', from: toInputDate(t), to: toInputDate(addDays(t,3)), note:'Alergia na prach', fromDate:new Date(t), toDate:addDays(new Date(t),3) },
+    { room:'Leo', guest:'Mária Horváth', contact:'maria@email.sk', from: toInputDate(addDays(t,2)), to: toInputDate(addDays(t,5)), note:'', fromDate:addDays(new Date(t),2), toDate:addDays(new Date(t),5) },
+  ];
+  renderOverview();
+  renderCalendar();
+}
+
+// ══════════════════════════════════════════════
+// PREHĽAD
+// ══════════════════════════════════════════════
+function renderOverview() {
+  const todayEl = document.getElementById('today-rooms');
+  const soonEl  = document.getElementById('soon-rooms');
+
+  const busyToday = reservations.filter(r => isInRange(today, r.fromDate, r.toDate));
+  const soon7 = reservations.filter(r => {
+    const diff = (r.fromDate - today) / 86400000;
+    return diff > 0 && diff <= 7;
+  });
+
+  // Zobraziť všetky izby s ich statusom
+  todayEl.innerHTML = ROOMS.map(room => {
+    const res = busyToday.find(r => r.room === room.name);
+    return `<div class="room-card">
+      <div class="room-dot ${res ? 'dot-busy' : 'dot-free'}"></div>
+      <div class="room-info">
+        <div class="room-name">${room.name}</div>
+        <div class="room-detail">${res ? res.guest + (res.contact ? ' · ' + res.contact : '') : 'Voľná'}</div>
+        ${res && res.note ? `<div class="room-detail" style="color:var(--text3);font-style:italic">${res.note}</div>` : ''}
+      </div>
+      <div class="room-beds">${room.beds}${room.note ? '+' : ''} 🛏</div>
+    </div>`;
+  }).join('');
+
+  soonEl.innerHTML = soon7.length === 0
+    ? `<div class="room-card"><div class="room-info"><div class="room-detail">Žiadne nadchádzajúce rezervácie</div></div></div>`
+    : soon7.map(r => `<div class="room-card">
+        <div class="room-dot dot-soon"></div>
+        <div class="room-info">
+          <div class="room-name">${r.room}</div>
+          <div class="room-detail">${r.guest}</div>
+          <div class="room-detail">príchod ${formatDate(r.fromDate)}</div>
+        </div>
+      </div>`).join('');
+}
+
+// ══════════════════════════════════════════════
+// KALENDÁR
+// ══════════════════════════════════════════════
+const SK_MONTHS = ['Január','Február','Marec','Apríl','Máj','Jún','Júl','August','September','Október','November','December'];
+const SK_DAYS   = ['Po','Ut','St','Št','Pi','So','Ne'];
+
+function renderCalendar() {
+  document.getElementById('cal-month-label').textContent = SK_MONTHS[calMonth] + ' ' + calYear;
+
+  const grid = document.getElementById('cal-grid');
+  grid.innerHTML = SK_DAYS.map(d => `<div class="cal-day-label">${d}</div>`).join('');
+
+  const first = new Date(calYear, calMonth, 1);
+  let startDow = first.getDay(); // 0=Sun
+  startDow = startDow === 0 ? 6 : startDow - 1; // Mon=0
+
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  const prevDays    = new Date(calYear, calMonth, 0).getDate();
+
+  // Prev month padding
+  for (let i = startDow-1; i >= 0; i--) {
+    grid.innerHTML += `<div class="cal-day other-month">${prevDays-i}</div>`;
+  }
+
+  // Current month
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(calYear, calMonth, d);
+    const isToday = date.toDateString() === today.toDateString();
+    const hasEvent = reservations.some(r => isInRange(date, r.fromDate, r.toDate));
+    const isSel = selectedCalDay && date.toDateString() === selectedCalDay.toDateString();
+    const cls = ['cal-day', isToday?'today':'', hasEvent?'has-event':'', isSel?'selected':''].filter(Boolean).join(' ');
+    grid.innerHTML += `<div class="${cls}" onclick="selectCalDay(new Date(${calYear},${calMonth},${d}))">${d}</div>`;
+  }
+
+  // Next month padding
+  const total = startDow + daysInMonth;
+  const remaining = total % 7 === 0 ? 0 : 7 - (total % 7);
+  for (let d = 1; d <= remaining; d++) {
+    grid.innerHTML += `<div class="cal-day other-month">${d}</div>`;
+  }
+}
+
+function changeMonth(dir) {
+  calMonth += dir;
+  if (calMonth < 0)  { calMonth = 11; calYear--; }
+  if (calMonth > 11) { calMonth = 0;  calYear++; }
+  selectedCalDay = null;
+  renderCalendar();
+  document.getElementById('day-reservations').innerHTML = '<div class="day-res-header">Vyber deň pre zobrazenie rezervácií</div>';
+}
+
+function selectCalDay(date) {
+  selectedCalDay = date;
+  renderCalendar();
+
+  const res = reservations.filter(r => isInRange(date, r.fromDate, r.toDate));
+  const el = document.getElementById('day-reservations');
+
+  if (res.length === 0) {
+    el.innerHTML = `<div class="day-res-header">${formatDate(date)} – žiadne rezervácie</div>`;
+    return;
+  }
+
+  el.innerHTML = `<div class="day-res-header">${formatDate(date)} – ${res.length} rezervácia/í</div>` +
+    res.map(r => `<div class="res-card">
+      <div class="res-room">${r.room}</div>
+      <div class="res-guest">${r.guest}${r.contact ? ' · <span style="color:var(--text2)">' + r.contact + '</span>' : ''}</div>
+      <div class="res-dates">${formatDate(r.fromDate)} → ${formatDate(r.toDate)}</div>
+      ${r.note ? `<div class="res-note">${r.note}</div>` : ''}
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════
+// FORMULÁR
+// ══════════════════════════════════════════════
+function buildRoomGrid() {
+  document.getElementById('room-grid').innerHTML = ROOMS.map(r =>
+    `<div class="room-option" id="ro-${r.id}" onclick="selectRoom('${r.id}','${r.name}')">
+      <div class="room-option-name">${r.name}</div>
+      <div class="room-option-beds">${r.beds} posteľ${r.beds>1?'e':''}${r.note ? ' ' + r.note : ''}</div>
+    </div>`
+  ).join('');
+}
+
+function selectRoom(id, name) {
+  selectedRoom = name;
+  document.querySelectorAll('.room-option').forEach(el => el.classList.remove('selected'));
+  document.getElementById('ro-'+id).classList.add('selected');
+}
+
+async function submitReservation() {
+  const guest   = document.getElementById('f-guest').value.trim();
+  const contact = document.getElementById('f-contact').value.trim();
+  const from    = document.getElementById('f-from').value;
+  const to      = document.getElementById('f-to').value;
+  const note    = document.getElementById('f-note').value.trim();
+
+  if (!guest)        return showToast('Zadaj meno hosťa', 'error');
+  if (!from || !to)  return showToast('Zadaj dátumy', 'error');
+  if (from >= to)    return showToast('Odchod musí byť po príchode', 'error');
+  if (!selectedRoom) return showToast('Vyber izbu', 'error');
+
+  // Kontrola konfliktu
+  const fromD = new Date(from), toD = new Date(to);
+  const conflict = reservations.find(r =>
+    r.room === selectedRoom &&
+    fromD < r.toDate && toD > r.fromDate
+  );
+  if (conflict) {
+    showToast(`${selectedRoom} je obsadená (${conflict.guest})`, 'error');
+    return;
+  }
+
+  const btn = document.getElementById('btn-submit');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Ukladám...';
+
+  try {
+    const params = new URLSearchParams({
+      action: 'addReservation',
+      room: selectedRoom, guest, contact, from, to, note
+    });
+    const r = await fetch(SCRIPT_URL + '?' + params);
+    const data = await r.json();
+
+    if (data.ok) {
+      showToast('Rezervácia pridaná ✓', 'success');
+      // Pridaj lokálne
+      reservations.push({ room:selectedRoom, guest, contact, from, to, note, fromDate:fromD, toDate:toD });
+      // Reset formulára
+      document.getElementById('f-guest').value = '';
+      document.getElementById('f-contact').value = '';
+      document.getElementById('f-note').value = '';
+      selectedRoom = null;
+      document.querySelectorAll('.room-option').forEach(el => el.classList.remove('selected'));
+      setTimeout(() => showPage('overview', document.querySelector('.nav-btn')), 800);
+    } else {
+      showToast('Chyba: ' + data.error, 'error');
+    }
+  } catch(e) {
+    showToast('Nepodarilo sa uložiť', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Pridať rezerváciu';
+  }
+}
+
+// ══════════════════════════════════════════════
+// POMOCNÉ
+// ══════════════════════════════════════════════
+function isInRange(date, from, to) {
+  const d = new Date(date); d.setHours(0,0,0,0);
+  const f = new Date(from); f.setHours(0,0,0,0);
+  const t = new Date(to);   t.setHours(0,0,0,0);
+  return d >= f && d < t;
+}
+function formatDate(d) {
+  return d.getDate() + '. ' + (d.getMonth()+1) + '. ' + d.getFullYear();
+}
+function toInputDate(d) {
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function addDays(d, n) { const r = new Date(d); r.setDate(r.getDate()+n); return r; }
+
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (type ? ' '+type : '');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+function showLoading(msg='Načítavam...') {
+  document.getElementById('loading-text').textContent = msg;
+  document.getElementById('loading').classList.add('show');
+}
+function hideLoading() {
+  document.getElementById('loading').classList.remove('show');
+}
+
+// PWA service worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
