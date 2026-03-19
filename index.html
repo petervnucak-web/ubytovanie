@@ -338,7 +338,7 @@ nav{
 // ══════════════════════════════════════════════
 // KONFIGURÁCIA – sem vlož URL svojho Apps Scriptu
 // ══════════════════════════════════════════════
-const SCRIPT_URL = https://script.google.com/macros/s/AKfycby4TWHHj4HSsM8lnG5MFREdMD8jxSvCDO7uDj26idTNpbR59MlZ6LFVBiga-h2W8BjRrw/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwjUMAtrDx97-USsBqt11T0X-E_mkI2-jpj2flW63dSy61X3-xxrl8F_EBL6HxzpPNW5w/exec';
 
 const ROOMS = [
   { id: 'assisi',       name: 'Assisi',                  beds: 2,  note: '' },
@@ -400,12 +400,33 @@ function showPage(name, btn) {
 // ══════════════════════════════════════════════
 // FETCH REZERVÁCIÍ Z APPS SCRIPT
 // ══════════════════════════════════════════════
+function callScript(params) {
+  return new Promise((resolve, reject) => {
+    const cbName = 'cb_' + Date.now();
+    const url = SCRIPT_URL + '?' + new URLSearchParams({...params, callback: cbName});
+    const script = document.createElement('script');
+    const timeout = setTimeout(() => {
+      delete window[cbName];
+      document.body.removeChild(script);
+      reject(new Error('timeout'));
+    }, 10000);
+    window[cbName] = (data) => {
+      clearTimeout(timeout);
+      delete window[cbName];
+      document.body.removeChild(script);
+      resolve(data);
+    };
+    script.src = url;
+    script.onerror = () => { clearTimeout(timeout); reject(new Error('script error')); };
+    document.body.appendChild(script);
+  });
+}
+
 async function fetchReservations(force=false) {
-  if (!force && Date.now() - lastFetch < 60000) return; // cache 1 min
+  if (!force && Date.now() - lastFetch < 60000) return;
   showLoading('Načítavam rezervácie...');
   try {
-    const r = await fetch(SCRIPT_URL + '?action=getReservations');
-    const data = await r.json();
+    const data = await callScript({action: 'getReservations'});
     if (data.ok) {
       reservations = data.reservations.map(r => ({
         ...r,
@@ -420,7 +441,6 @@ async function fetchReservations(force=false) {
     }
   } catch(e) {
     showToast('Nepodarilo sa spojiť so serverom', 'error');
-    // Demo dáta pre testovanie bez backendu
     loadDemoData();
   } finally {
     hideLoading();
@@ -594,12 +614,10 @@ async function submitReservation() {
   btn.innerHTML = '<span class="spinner"></span>Ukladám...';
 
   try {
-    const params = new URLSearchParams({
+    const data = await callScript({
       action: 'addReservation',
       room: selectedRoom, guest, contact, from, to, note
     });
-    const r = await fetch(SCRIPT_URL + '?' + params);
-    const data = await r.json();
 
     if (data.ok) {
       showToast('Rezervácia pridaná ✓', 'success');
